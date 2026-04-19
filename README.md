@@ -25,11 +25,11 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 
 ## Prerequisites
 
-**Required CRDs**: [Gateway API](https://gateway-api.sigs.k8s.io/) . [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler)
-
-**Gateway controller** (any Gateway API-compatible controller): [Traefik](https://traefik.io/traefik/) . [Envoy Gateway](https://gateway.envoyproxy.io/) . [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) . [Cilium](https://cilium.io/) - update `gatewayClassName` in `gateway.yaml` to match your controller
-
-**Recommended for production**: [cert-manager](https://cert-manager.io/) . [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) . [External Secrets](https://external-secrets.io/)
+| Type | Options | Notes |
+|------|---------|-------|
+| Required CRDs | [Gateway API](https://gateway-api.sigs.k8s.io/) . [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) | |
+| Gateway controller | [Traefik](https://traefik.io/traefik/) . [Envoy Gateway](https://gateway.envoyproxy.io/) . [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) . [Cilium](https://cilium.io/) | Update `gatewayClassName` in `gateway.yaml` |
+| Recommended for production | [cert-manager](https://cert-manager.io/) . [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) . [External Secrets](https://external-secrets.io/) | |
 
 ## Usage
 
