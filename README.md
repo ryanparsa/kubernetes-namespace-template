@@ -34,7 +34,7 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs | Needed for Gateway and HTTPRoute resources |
 | [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) CRDs | Needed for VPA resource |
 | [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) | Needed for HPA to read CPU/memory utilization |
-| Gateway controller (pick one): [Traefik](https://traefik.io/traefik/) · [Envoy Gateway](https://gateway.envoyproxy.io/) · [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) · [Cilium](https://cilium.io/) | Set `gatewayClassName` in `gateway.yaml` to match your choice |
+| Gateway controller | Set `gatewayClassName` in `gateway.yaml` to match your choice — [Traefik](https://traefik.io/traefik/), [Envoy Gateway](https://gateway.envoyproxy.io/), [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric), [Cilium](https://cilium.io/) |
 
 ### Recommended
 
