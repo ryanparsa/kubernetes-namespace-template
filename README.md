@@ -126,3 +126,10 @@ CI runs on every push and pull request using a local [kind](https://kind.sigs.k8
 namespace -> serviceaccount -> role -> rolebinding -> configmap -> secret -> resourcequota -> limitrange
 -> networkpolicy -> deployment -> service -> hpa -> vpa -> pdb -> gateway -> httproute
 ```
+
+
+## Related Projects
+
+- [klist](https://github.com/ryanparsa/klist) - Interactive Kubernetes operational checklist to verify cluster readiness
+- [kubernetes-certification](https://github.com/ryanparsa/kubernetes-certification) - CKA/KCNA/KCSA certification training scenarios
+
