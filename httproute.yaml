@@ -14,6 +14,8 @@ spec:
     - name: project-n-gw
       namespace: project-n
       sectionName: http
+  hostnames:
+    - project-n.example.com
   rules:
     - filters:
         - type: RequestRedirect
@@ -38,6 +40,8 @@ spec:
     - name: project-n-gw
       namespace: project-n
       sectionName: https
+  hostnames:
+    - project-n.example.com
   rules:
     - matches:
         - path:

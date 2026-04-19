@@ -54,7 +54,7 @@ spec:
 
       containers:
         - name: project-n
-          image: nginx:1.27
+          image: nginxinc/nginx-unprivileged:1.27
 
           # Always pull to catch updates on non-pinned tags
           imagePullPolicy: Always
