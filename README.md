@@ -27,15 +27,22 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 
 ## Prerequisites
 
-| Type | Dependency | Notes |
-|------|------------|-------|
-| Required CRD | [Gateway API](https://gateway-api.sigs.k8s.io/) | Needed for Gateway and HTTPRoute resources |
-| Required CRD | [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) | Needed for VPA resource |
-| Gateway controller (pick one) | [Traefik](https://traefik.io/traefik/) . [Envoy Gateway](https://gateway.envoyproxy.io/) . [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) . [Cilium](https://cilium.io/) | Set `gatewayClassName` in `gateway.yaml` to match your choice |
-| Required | [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) | Needed for HPA to read CPU/memory utilization |
-| Recommended | [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
-| Recommended | [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts secrets for safe GitOps storage |
-| Recommended | [External Secrets](https://external-secrets.io/) | Syncs secrets from external vaults (AWS, GCP, Vault, etc.) |
+### Required
+
+| Dependency | Notes |
+|------------|-------|
+| [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs | Needed for Gateway and HTTPRoute resources |
+| [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) CRDs | Needed for VPA resource |
+| [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) | Needed for HPA to read CPU/memory utilization |
+| Gateway controller (pick one): [Traefik](https://traefik.io/traefik/) · [Envoy Gateway](https://gateway.envoyproxy.io/) · [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) · [Cilium](https://cilium.io/) | Set `gatewayClassName` in `gateway.yaml` to match your choice |
+
+### Recommended
+
+| Dependency | Notes |
+|------------|-------|
+| [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
+| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts secrets for safe GitOps storage |
+| [External Secrets](https://external-secrets.io/) | Syncs secrets from external vaults (AWS, GCP, Vault, etc.) |
 
 ## Usage
 
