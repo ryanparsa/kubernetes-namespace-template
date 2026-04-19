@@ -15,18 +15,19 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | `networkpolicy.yaml` | NetworkPolicy (×3) | Default-deny all traffic; allow ingress from the Traefik Gateway controller; allow egress to kube-dns |
 | `deployment.yaml` | Deployment | Rolling-update deployment with security context, probes, topology spread, and emptyDir volumes for nginx writable dirs |
 | `service.yaml` | Service | ClusterIP service; only routes to ready pods |
-| `hpa.yaml` | HorizontalPodAutoscaler | Scales 1–10 replicas on CPU and memory (50% target utilization) |
+| `hpa.yaml` | HorizontalPodAutoscaler | Scales 3–10 replicas on CPU and memory (50% target utilization); 5-minute scale-down stabilisation window |
 | `vpa.yaml` | VerticalPodAutoscaler | Runs in `Off` mode — recommendations only, no automatic resizing |
-| `pdb.yaml` | PodDisruptionBudget | Keeps at least 1 pod available during voluntary disruptions |
-| `gateway.yaml` | Gateway | Traefik Gateway API listeners on port 80 (HTTP) and 443 (HTTPS/TLS termination) |
-| `httproute.yaml` | HTTPRoute (×2) | HTTP → HTTPS redirect (301) and HTTPS → backend routing |
+| `pdb.yaml` | PodDisruptionBudget | Keeps at least 2 pods available during voluntary disruptions |
+| `gateway.yaml` | Gateway | Traefik Gateway API listeners on port 80 (HTTP) and 443 (HTTPS/TLS termination) scoped to `project-n.example.com` |
+| `httproute.yaml` | HTTPRoute (×2) | HTTP → HTTPS redirect (301) and HTTPS → backend routing, both scoped to `project-n.example.com` |
 
 ## Usage
 
 1. **Clone** this repo and `cd` into it.
-2. **Replace placeholders** — swap `project-n` with your service name throughout all files:
+2. **Replace placeholders** — swap `project-n` with your service name and `project-n.example.com` with your real hostname throughout all files:
    ```sh
    find . -name '*.yaml' | xargs sed -i '' 's/project-n/your-service/g'
+   find . -name '*.yaml' | xargs sed -i '' 's/project-n\.example\.com/your-service.example.com/g'
    ```
 3. **Provision the TLS secret** referenced in `gateway.yaml` (`project-n-tls`) via cert-manager or manually before applying the Gateway.
 4. **Apply:**

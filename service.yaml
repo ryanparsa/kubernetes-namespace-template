@@ -17,5 +17,3 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 80
-  # Only route to pods that pass readinessProbe
-  publishNotReadyAddresses: false

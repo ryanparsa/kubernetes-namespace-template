@@ -13,7 +13,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: project-n-deployment
-  minReplicas: 1
+  minReplicas: 3
   maxReplicas: 10
   metrics:
     # Scale out when average CPU utilization across pods exceeds 50%
@@ -30,3 +30,7 @@ spec:
         target:
           type: Utilization
           averageUtilization: 50
+  behavior:
+    scaleDown:
+      # Wait 5 minutes of sustained low load before scaling down to avoid thrashing
+      stabilizationWindowSeconds: 300

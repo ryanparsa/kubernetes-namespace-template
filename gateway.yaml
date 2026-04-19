@@ -14,6 +14,7 @@ spec:
     - name: http
       protocol: HTTP
       port: 80
+      hostname: project-n.example.com
       allowedRoutes:
         namespaces:
           from: Same
@@ -21,6 +22,7 @@ spec:
     - name: https
       protocol: HTTPS
       port: 443
+      hostname: project-n.example.com
       tls:
         mode: Terminate
         # Secret must exist in the same namespace; provision with cert-manager or manually

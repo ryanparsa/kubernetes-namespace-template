@@ -22,7 +22,7 @@ jobs:
 
       - name: Install VPA CRDs
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/vertical-pod-autoscaler-1.2.2/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
 
       - name: Apply manifests
         run: |
