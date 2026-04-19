@@ -1,45 +1,94 @@
 # Kubernetes Project Baseline
 
+[![Test with kind](https://github.com/ryanparsa/kubernetes-namespace-template/actions/workflows/test.yaml/badge.svg)](https://github.com/ryanparsa/kubernetes-namespace-template/actions/workflows/test.yaml)
+
 A production-ready baseline for deploying a service on Kubernetes. Replace every occurrence of `project-n` with your service name, then apply the manifests.
 
-[![Test with kind](https://github.com/ryanparsa/kubernetes-project-baseline/actions/workflows/test.yaml/badge.svg)](https://github.com/ryanparsa/kubernetes-project-baseline/actions/workflows/test.yaml)
+## Included Resources
 
-## Files
+| File | Resource(s) | Purpose |
+|------|-------------|---------|
+| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission `restricted` enforcement |
+| `serviceaccount.yaml` | ServiceAccount | Workload identity with token auto-mount disabled |
+| `configmap.yaml` | ConfigMap | Non-sensitive configuration loaded as environment variables |
+| `secret.yaml` | Secret (x2) | App credentials (file-mounted) + TLS certificate |
+| `resourcequota.yaml` | ResourceQuota | Namespace-level CPU/memory/pod caps |
+| `limitrange.yaml` | LimitRange | Per-container default requests and limits |
+| `networkpolicy.yaml` | NetworkPolicy (x3) | Default-deny all, allow gateway ingress, allow DNS egress |
+| `deployment.yaml` | Deployment | Main workload - non-root, read-only FS, rolling update |
+| `service.yaml` | Service | ClusterIP exposing the deployment on port 80 |
+| `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) |
+| `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) |
+| `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions |
+| `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners |
+| `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing |
 
-| File | Kind | Purpose |
-|---|---|---|
-| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission labels enforcing the `restricted` profile |
-| `serviceaccount.yaml` | ServiceAccount | Dedicated identity for the workload; auto-mount disabled |
-| `resourcequota.yaml` | ResourceQuota | Caps total CPU/memory requests and limits across all pods in the namespace |
-| `limitrange.yaml` | LimitRange | Injects default CPU/memory requests and limits for containers that don't set their own |
-| `networkpolicy.yaml` | NetworkPolicy (×3) | Default-deny all traffic; allow ingress from the Traefik Gateway controller; allow egress to kube-dns |
-| `deployment.yaml` | Deployment | Rolling-update deployment with security context, probes, topology spread, and emptyDir volumes for nginx writable dirs |
-| `service.yaml` | Service | ClusterIP service; only routes to ready pods |
-| `hpa.yaml` | HorizontalPodAutoscaler | Scales 3–10 replicas on CPU and memory (50% target utilization); 5-minute scale-down stabilisation window |
-| `vpa.yaml` | VerticalPodAutoscaler | Runs in `Off` mode - recommendations only, no automatic resizing |
-| `pdb.yaml` | PodDisruptionBudget | Keeps at least 2 pods available during voluntary disruptions |
-| `gateway.yaml` | Gateway | Traefik Gateway API listeners on port 80 (HTTP) and 443 (HTTPS/TLS termination) scoped to `project-n.example.com` |
-| `httproute.yaml` | HTTPRoute (×2) | HTTP → HTTPS redirect (301) and HTTPS → backend routing, both scoped to `project-n.example.com` |
+## Prerequisites
+
+**Required CRDs**: [Gateway API](https://gateway-api.sigs.k8s.io/) . [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler)
+
+**Gateway controller** (any Gateway API-compatible controller): [Traefik](https://traefik.io/traefik/) . [Envoy Gateway](https://gateway.envoyproxy.io/) . [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric) . [Cilium](https://cilium.io/) - update `gatewayClassName` in `gateway.yaml` to match your controller
+
+**Recommended for production**: [cert-manager](https://cert-manager.io/) . [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) . [External Secrets](https://external-secrets.io/)
 
 ## Usage
 
-1. **Clone** this repo and `cd` into it.
-2. **Replace placeholders** - swap `project-n` with your service name and `project-n.example.com` with your real hostname throughout all files:
-   ```sh
-   find . -name '*.yaml' | xargs sed -i '' 's/project-n/your-service/g'
-   find . -name '*.yaml' | xargs sed -i '' 's/project-n\.example\.com/your-service.example.com/g'
-   ```
-3. **Provision the TLS secret** referenced in `gateway.yaml` (`project-n-tls`) via cert-manager or manually before applying the Gateway.
-4. **Apply:**
-   ```sh
-   kubectl apply -f namespace.yaml
-   kubectl apply -f .
-   ```
+```bash
+# 1. Clone
+git clone https://github.com/ryanparsa/kubernetes-namespace-template.git my-service
+cd my-service
 
-## Requirements
+# 2. Replace the placeholder name
+find . -name '*.yaml' | xargs sed -i 's/project-n/my-service/g'
 
-- Kubernetes 1.25+ (for Pod Security Admission)
-- [Traefik](https://doc.traefik.io/traefik/providers/kubernetes-gateway/) installed in the `traefik` namespace with the Gateway API provider enabled
-- Gateway API CRDs installed (`gateway.networking.k8s.io/v1`)
-- VPA CRDs installed if you want VPA recommendations (`vpa.yaml`)
-- Metrics Server installed for HPA to function (`hpa.yaml`)
+# 3. Edit placeholder values
+#    - deployment.yaml  -> image, resource limits
+#    - gateway.yaml     -> hostname (project-n.example.com)
+#    - secret.yaml      -> credentials, TLS cert/key
+#    - hpa.yaml         -> min/max replica counts
+
+# 4. Apply
+kubectl apply -f .
+```
+
+## Architecture
+
+### Security
+- **Pod Security Admission** - `restricted` profile enforced at namespace level
+- **Non-root** - runs as UID 1000, `runAsNonRoot: true`
+- **Read-only root filesystem** - writable paths (`/tmp`, `/var/cache/nginx`, `/var/run`) use size-limited `emptyDir` volumes
+- **Capabilities** - all Linux capabilities dropped; `seccompProfile: RuntimeDefault`
+- **NetworkPolicy** - default-deny ingress/egress; explicit rules for gateway and DNS only
+- **Secrets** - mounted as files under `/etc/secret`, not environment variables
+
+### High Availability
+- **HPA** - horizontal scaling 3-10 replicas based on CPU/memory utilization
+- **VPA** - advisory mode alongside HPA (no interference)
+- **PDB** - `minAvailable: 2` allows one pod to be disrupted at a time
+- **Topology spread** - pods spread evenly across nodes (`maxSkew: 1`)
+- **Rolling update** - `maxUnavailable: 0, maxSurge: 1` for zero-downtime deploys
+
+### Networking
+- **Kubernetes Gateway API** - modern replacement for Ingress; bring your own Gateway controller and set `gatewayClassName` accordingly
+- **HTTP->HTTPS redirect** - all port-80 traffic receives a 301 redirect
+- **TLS termination** - handled at the Gateway using the `project-n-tls` secret
+
+## Labeling Convention
+
+All resources use `app.kubernetes.io/` semantic labels:
+
+```yaml
+app.kubernetes.io/name: project-n
+app.kubernetes.io/component: server        # or gateway, autoscaler
+app.kubernetes.io/part-of: project-n
+app.kubernetes.io/managed-by: kubectl
+```
+
+## Testing
+
+CI runs on every push and pull request using a local [kind](https://kind.sigs.k8s.io/) cluster. Each manifest is applied and verified independently:
+
+```
+namespace -> serviceaccount -> configmap -> secret -> resourcequota -> limitrange
+-> networkpolicy -> deployment -> service -> hpa -> vpa -> pdb -> gateway -> httproute
+```
