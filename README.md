@@ -110,10 +110,6 @@ Controls not enforced at the manifest level (require cluster-level configuration
 
 CI runs on every push and pull request using a local [kind](https://kind.sigs.k8s.io/) cluster:
 
-1. **kube-score** - static analysis of manifests for security and best-practice regressions
-2. **Trivy** - CVE scan of the container image (blocks on CRITICAL/HIGH unfixed vulnerabilities)
-3. **Apply + verify** - each manifest applied independently and verified with `kubectl get`
-
 ```
 namespace -> serviceaccount -> role -> rolebinding -> configmap -> secret -> resourcequota -> limitrange
 -> networkpolicy -> deployment -> service -> hpa -> vpa -> pdb -> gateway -> httproute
