@@ -1,0 +1,17 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: project-n-pdb
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/component: server
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  # Keep at least 1 pod running during voluntary disruptions (node drain, rolling update)
+  # Matches HPA minReplicas: 1 to avoid blocking scale-down
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: project-n

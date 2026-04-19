@@ -1,0 +1,48 @@
+# HTTP → HTTPS redirect
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: project-n-redirect
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  parentRefs:
+    - name: project-n
+      namespace: project-n
+      sectionName: http
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+
+---
+# HTTPS → backend
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: project-n
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  parentRefs:
+    - name: project-n
+      namespace: project-n
+      sectionName: https
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: project-n
+          port: 80

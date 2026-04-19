@@ -1,0 +1,19 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: project-n-vpa
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/component: autoscaler
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: project-n
+  updatePolicy:
+    # "Off" means VPA only provides recommendations — it does not restart or resize pods
+    # Safe to run alongside HPA since it never mutates the deployment
+    updateMode: "Off"

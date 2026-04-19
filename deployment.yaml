@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-n
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/component: server
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+
+  # Keep only 3 old ReplicaSets for rollback (default 10 is wasteful)
+  revisionHistoryLimit: 3
+
+  # Fail the rollout if it hasn't progressed within 10 minutes
+  progressDeadlineSeconds: 600
+
+  # Pod must be ready for 10s before considered available (prevents premature traffic)
+  # minReadySeconds: 10
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Allow 1 extra pod during rollout so capacity is never reduced
+      maxSurge: 1
+      # Never take a pod down before a new one is ready
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: project-n
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: project-n
+        app.kubernetes.io/component: server
+        app.kubernetes.io/part-of: project-n
+        app.kubernetes.io/version: "1.0.0"
+
+    spec:
+      serviceAccountName: project-n
+      automountServiceAccountToken: false
+      # Spread pods evenly across nodes to avoid single points of failure
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: project-n
+
+      containers:
+        - name: project-n
+          image: nginx:1.27
+
+          # Always pull to catch updates on non-pinned tags
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80
+              protocol: TCP
+
+          resources:
+            # Explicit requests/limits ensure HPA has metrics to act on
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+
+          # Restart the pod if it stops responding (e.g. deadlock)
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # Remove pod from Service endpoints until it's truly ready
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+
+          securityContext:
+            # Satisfies PSA restricted profile
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+
+      volumes:
+        # Scoped emptyDir volumes replace the read-only filesystem for nginx's writable dirs
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+        - name: nginx-cache
+          emptyDir:
+            sizeLimit: 128Mi
+        - name: nginx-run
+          emptyDir:
+            sizeLimit: 16Mi
