@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: project-n-rolebinding
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+subjects:
+  - kind: ServiceAccount
+    name: project-n-sa
+    namespace: project-n
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: project-n-role

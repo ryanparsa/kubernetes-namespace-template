@@ -20,6 +20,8 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) |
 | `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) |
 | `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions |
+| `role.yaml` | Role | Empty RBAC Role — add rules here as your workload requires |
+| `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount |
 | `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners |
 | `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing |
 
@@ -64,6 +66,7 @@ kubectl apply -f .
 - **Capabilities** - all Linux capabilities dropped; `seccompProfile: RuntimeDefault`
 - **NetworkPolicy** - default-deny ingress/egress; explicit rules for gateway and DNS only
 - **Secrets** - mounted as files under `/etc/secret`, not environment variables
+- **RBAC** - empty Role with RoleBinding; grants zero permissions by default (principle of least privilege)
 
 ### High Availability
 - **HPA** - horizontal scaling 3-10 replicas based on CPU/memory utilization
@@ -71,6 +74,8 @@ kubectl apply -f .
 - **PDB** - `minAvailable: 2` allows one pod to be disrupted at a time
 - **Topology spread** - pods spread evenly across nodes (`maxSkew: 1`)
 - **Rolling update** - `maxUnavailable: 0, maxSurge: 1` for zero-downtime deploys
+- **Graceful shutdown** - `preStop` sleep drains in-flight requests before SIGTERM; `terminationGracePeriodSeconds: 30`
+- **Startup probe** - gates liveness/readiness checks until the container has passed initialization (up to 60s)
 
 ### Networking
 - **Kubernetes Gateway API** - modern replacement for Ingress; bring your own Gateway controller and set `gatewayClassName` accordingly
@@ -88,11 +93,28 @@ app.kubernetes.io/part-of: project-n
 app.kubernetes.io/managed-by: kubectl
 ```
 
+## Security Compliance
+
+| Control | Implementation | Standard |
+|---------|---------------|----------|
+| Insecure workload configurations | PSA `restricted`, non-root, read-only FS, drop ALL caps, seccomp | OWASP K01, CIS 5.2 |
+| Secrets management | File-mounted secrets, no env vars, etcd encryption recommended | OWASP K03, CIS 5.4 |
+| Network segmentation | Default-deny NetworkPolicy; allow only gateway + DNS | OWASP K05, CIS 5.3 |
+| Least privilege | Empty RBAC Role, `automountServiceAccountToken: false` | OWASP K09, CIS 5.1 |
+| Resource limits | ResourceQuota + LimitRange on every container | CIS 5.6 |
+| Availability | HPA (3-10), PDB (minAvailable: 2), topology spread, zero-downtime rolling update | CIS 5.7 |
+
+Controls not enforced at the manifest level (require cluster-level configuration): etcd encryption at rest (CIS 1.2.34), audit logging (CIS 1.2.22), API server hardening (CIS 1.2.*).
+
 ## Testing
 
-CI runs on every push and pull request using a local [kind](https://kind.sigs.k8s.io/) cluster. Each manifest is applied and verified independently:
+CI runs on every push and pull request using a local [kind](https://kind.sigs.k8s.io/) cluster:
+
+1. **kube-score** - static analysis of manifests for security and best-practice regressions
+2. **Trivy** - CVE scan of the container image (blocks on CRITICAL/HIGH unfixed vulnerabilities)
+3. **Apply + verify** - each manifest applied independently and verified with `kubectl get`
 
 ```
-namespace -> serviceaccount -> configmap -> secret -> resourcequota -> limitrange
+namespace -> serviceaccount -> role -> rolebinding -> configmap -> secret -> resourcequota -> limitrange
 -> networkpolicy -> deployment -> service -> hpa -> vpa -> pdb -> gateway -> httproute
 ```

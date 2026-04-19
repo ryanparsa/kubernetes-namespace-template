@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: project-n-role
+  namespace: project-n
+  labels:
+    app.kubernetes.io/name: project-n
+    app.kubernetes.io/part-of: project-n
+    app.kubernetes.io/managed-by: kubectl
+# No rules by default - add permissions here as your application requires them
+rules: []

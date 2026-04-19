@@ -2,7 +2,7 @@ name: Test with kind
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Create kind cluster
         uses: helm/kind-action@v1
@@ -18,10 +18,31 @@ jobs:
           cluster_name: test
 
       - name: Install Gateway API CRDs
-        run: kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+        run: kubectl apply --server-side -f
+          https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
 
       - name: Install VPA CRDs
-        run: kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/vertical-pod-autoscaler-1.2.2/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+        run: kubectl apply -f
+          https://raw.githubusercontent.com/kubernetes/autoscaler/vpa-release-1.0/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+
+      - name: Lint with kube-score
+        run: |
+          curl -sSL https://github.com/zegl/kube-score/releases/download/v1.19.0/kube-score_1.19.0_linux_amd64.tar.gz | tar xz
+          chmod +x kube-score
+          ./kube-score score \
+            --ignore-test pod-networkpolicy \
+            namespace.yaml serviceaccount.yaml configmap.yaml secret.yaml \
+            resourcequota.yaml limitrange.yaml networkpolicy.yaml deployment.yaml \
+            service.yaml hpa.yaml pdb.yaml role.yaml rolebinding.yaml
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: nginxinc/nginx-unprivileged:1.27
+          format: table
+          exit-code: '1'
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
 
       - name: Test Namespace
         run: |
@@ -32,6 +53,16 @@ jobs:
         run: |
           kubectl apply -f serviceaccount.yaml
           kubectl get serviceaccount project-n-sa -n project-n
+
+      - name: Test Role
+        run: |
+          kubectl apply -f role.yaml
+          kubectl get role project-n-role -n project-n
+
+      - name: Test RoleBinding
+        run: |
+          kubectl apply -f rolebinding.yaml
+          kubectl get rolebinding project-n-rolebinding -n project-n
 
       - name: Test ConfigMap
         run: |

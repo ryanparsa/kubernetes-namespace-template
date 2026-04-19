@@ -19,7 +19,7 @@ spec:
   progressDeadlineSeconds: 600
 
   # Pod must be ready for 10s before considered available (prevents premature traffic)
-  # minReadySeconds: 10
+  minReadySeconds: 10
 
   strategy:
     type: RollingUpdate
@@ -34,6 +34,8 @@ spec:
 
   template:
     metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       labels:
         app.kubernetes.io/name: project-n
         app.kubernetes.io/component: server
@@ -43,6 +45,7 @@ spec:
     spec:
       serviceAccountName: project-n-sa
       automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
       # Required by PSA restricted profile
       securityContext:
         seccompProfile:
@@ -93,6 +96,20 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 3
+
+          # Gate liveness/readiness until the container has passed startup (up to 60s)
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            failureThreshold: 30
+            periodSeconds: 2
+
+          # Drain in-flight requests before SIGTERM is sent
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
 
           securityContext:
             # Satisfies PSA restricted profile
