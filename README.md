@@ -6,24 +6,28 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 
 ## Included Resources
 
-| File | Resource(s) | Purpose |
-|------|-------------|---------|
-| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission `restricted` enforcement |
-| `serviceaccount.yaml` | ServiceAccount | Workload identity with token auto-mount disabled |
-| `configmap.yaml` | ConfigMap | Non-sensitive configuration loaded as environment variables |
-| `secret.yaml` | Secret (x2) | App credentials (file-mounted) + TLS certificate |
-| `resourcequota.yaml` | ResourceQuota | Namespace-level CPU/memory/pod caps |
-| `limitrange.yaml` | LimitRange | Per-container default requests and limits |
-| `networkpolicy.yaml` | NetworkPolicy (x3) | Default-deny all, allow gateway ingress, allow DNS egress |
-| `deployment.yaml` | Deployment | Main workload - non-root, read-only FS, rolling update |
-| `service.yaml` | Service | ClusterIP exposing the deployment on port 80 |
-| `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) |
-| `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) |
-| `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions |
-| `role.yaml` | Role | Empty RBAC Role - add rules here as your workload requires |
-| `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount |
-| `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners |
-| `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing |
+> **Pure Kubernetes by default.** 13 of 16 resources use only built-in Kubernetes APIs.
+> Three resources need external components: `hpa.yaml` (Metrics Server), `vpa.yaml` (VPA CRDs), and `gateway.yaml`/`httproute.yaml` (Gateway API CRDs + a controller).
+> You can delete any of those files if you don't need them — the rest applies cleanly to any standard cluster.
+
+| File | Resource(s) | Purpose | Requires |
+|------|-------------|---------|----------|
+| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission `restricted` enforcement | — |
+| `serviceaccount.yaml` | ServiceAccount | Workload identity with token auto-mount disabled | — |
+| `configmap.yaml` | ConfigMap | Non-sensitive configuration loaded as environment variables | — |
+| `secret.yaml` | Secret (x2) | App credentials (file-mounted) + TLS certificate | — |
+| `resourcequota.yaml` | ResourceQuota | Namespace-level CPU/memory/pod caps | — |
+| `limitrange.yaml` | LimitRange | Per-container default requests and limits | — |
+| `networkpolicy.yaml` | NetworkPolicy (x3) | Default-deny all, allow gateway ingress, allow DNS egress | — |
+| `deployment.yaml` | Deployment | Main workload - non-root, read-only FS, rolling update | — |
+| `service.yaml` | Service | ClusterIP exposing the deployment on port 80 | — |
+| `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) | [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) |
+| `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) | [VPA CRDs](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) |
+| `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions | — |
+| `role.yaml` | Role | Empty RBAC Role - add rules here as your workload requires | — |
+| `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount | — |
+| `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + controller |
+| `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + controller |
 
 ## Prerequisites
 
