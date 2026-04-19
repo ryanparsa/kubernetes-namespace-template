@@ -20,7 +20,7 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) |
 | `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) |
 | `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions |
-| `role.yaml` | Role | Empty RBAC Role — add rules here as your workload requires |
+| `role.yaml` | Role | Empty RBAC Role - add rules here as your workload requires |
 | `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount |
 | `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners |
 | `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing |
@@ -34,14 +34,14 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs | Needed for Gateway and HTTPRoute resources |
 | [Vertical Pod Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) CRDs | Needed for VPA resource |
 | [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) | Needed for HPA to read CPU/memory utilization |
-| Gateway controller | Set `gatewayClassName` in `gateway.yaml` to match your choice — [Traefik](https://traefik.io/traefik/), [Envoy Gateway](https://gateway.envoyproxy.io/), [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric), [Cilium](https://cilium.io/) |
+| Gateway controller | Set `gatewayClassName` in `gateway.yaml` to match your choice - [Traefik](https://traefik.io/traefik/), [Envoy Gateway](https://gateway.envoyproxy.io/), [NGINX Gateway Fabric](https://github.com/nginxinc/nginx-gateway-fabric), [Cilium](https://cilium.io/) |
 
 ### Recommended
 
 | Dependency | Notes |
 |------------|-------|
 | [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
-| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts secrets for safe GitOps storage |
+| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts `project-n-secret` for safe GitOps storage |
 | [External Secrets](https://external-secrets.io/) | Syncs secrets from external vaults (AWS, GCP, Vault, etc.) |
 
 ## Usage
