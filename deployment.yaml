@@ -61,14 +61,13 @@ spec:
 
       containers:
         - name: project-n
-          image: nginxinc/nginx-unprivileged:1.27
-
-          # Always pull to catch updates on non-pinned tags
+          image: registry.k8s.io/pause:3.10
           imagePullPolicy: Always
 
-          ports:
-            - containerPort: 80
-              protocol: TCP
+          # Expose the port your application listens on
+          # ports:
+          #   - containerPort: 8080
+          #     protocol: TCP
 
           resources:
             # Explicit requests/limits ensure HPA has metrics to act on
@@ -79,31 +78,29 @@ spec:
               cpu: 200m
               memory: 256Mi
 
-          # Restart the pod if it stops responding (e.g. deadlock)
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
-
-          # Remove pod from Service endpoints until it's truly ready
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 3
-
-          # Gate liveness/readiness until the container has passed startup (up to 60s)
-          startupProbe:
-            httpGet:
-              path: /
-              port: 80
-            failureThreshold: 30
-            periodSeconds: 2
+          # Configure probes for your application
+          # livenessProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
+          #   failureThreshold: 3
+          #
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 8080
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 5
+          #   failureThreshold: 3
+          #
+          # startupProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 8080
+          #   failureThreshold: 30
+          #   periodSeconds: 2
 
           # Drain in-flight requests before SIGTERM is sent
           lifecycle:
@@ -126,17 +123,10 @@ spec:
             - configMapRef:
                 name: project-n-cm
 
-          # Sample volumeMounts - adjust or remove to match your image's writable dir requirements
+          # Sample volumeMounts - adjust to match your image's writable dir requirements
           volumeMounts:
-            # emptyDir mounts must be writable - nginx writes to these at runtime
             - name: tmp
               mountPath: /tmp
-              readOnly: false
-            - name: nginx-cache
-              mountPath: /var/cache/nginx
-              readOnly: false
-            - name: nginx-run
-              mountPath: /var/run
               readOnly: false
 
             # Mount secret as files - safer than env vars (not captured in crash dumps or logs)
@@ -144,19 +134,10 @@ spec:
               mountPath: /etc/secret
               readOnly: true
 
-      # Sample volumes - remove the emptyDir entries if your image doesn't need them
       volumes:
-        # Scoped emptyDir volumes replace the read-only filesystem for nginx's writable dirs
         - name: tmp
           emptyDir:
             sizeLimit: 64Mi
-
-        - name: nginx-cache
-          emptyDir:
-            sizeLimit: 128Mi
-        - name: nginx-run
-          emptyDir:
-            sizeLimit: 16Mi
 
         - name: secret
           secret:

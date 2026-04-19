@@ -48,7 +48,6 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | [Karpenter](https://github.com/kubernetes-sigs/karpenter) | Node autoscaler - the `safe-to-evict` annotation on the pod template is compatible with it |
 | [Descheduler](https://github.com/kubernetes-sigs/descheduler) | Rebalances pods across nodes - complements the topology spread constraint |
 | [Security Profiles Operator](https://github.com/kubernetes-sigs/security-profiles-operator) | Manages seccomp and AppArmor profiles - extends the `seccompProfile: RuntimeDefault` used here |
-| [External DNS](https://github.com/kubernetes-sigs/external-dns) | Automatically creates DNS records for the Gateway hostname |
 
 ## Usage
 
@@ -75,7 +74,7 @@ kubectl apply -f .
 ### Security
 - **Pod Security Admission** - `restricted` profile enforced at namespace level
 - **Non-root** - runs as UID 1000, `runAsNonRoot: true`
-- **Read-only root filesystem** - writable paths (`/tmp`, `/var/cache/nginx`, `/var/run`) use size-limited `emptyDir` volumes
+- **Read-only root filesystem** - writable paths (e.g. `/tmp`) use size-limited `emptyDir` volumes
 - **Capabilities** - all Linux capabilities dropped; `seccompProfile: RuntimeDefault`
 - **NetworkPolicy** - default-deny ingress/egress; explicit rules for gateway and DNS only
 - **Secrets** - mounted as files under `/etc/secret`, not environment variables

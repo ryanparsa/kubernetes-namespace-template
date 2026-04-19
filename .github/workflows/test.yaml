@@ -38,7 +38,7 @@ jobs:
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: nginxinc/nginx-unprivileged:1.27
+          image-ref: registry.k8s.io/pause:3.10
           format: table
           exit-code: '1'
           severity: CRITICAL,HIGH
