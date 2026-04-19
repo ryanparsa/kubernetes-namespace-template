@@ -1,6 +1,8 @@
-# Kubernetes Namespace Template
+# Kubernetes Project Baseline
 
-A production-ready template for onboarding a new service into a Kubernetes cluster. Replace every occurrence of `project-n` with your service name, then apply the manifests in order.
+A production-ready baseline for deploying a service on Kubernetes. Replace every occurrence of `project-n` with your service name, then apply the manifests.
+
+[![Test with kind](https://github.com/ryanparsa/kubernetes-project-baseline/actions/workflows/test.yaml/badge.svg)](https://github.com/ryanparsa/kubernetes-project-baseline/actions/workflows/test.yaml)
 
 ## Files
 
@@ -22,30 +24,21 @@ A production-ready template for onboarding a new service into a Kubernetes clust
 ## Usage
 
 1. **Clone** this repo and `cd` into it.
-2. **Replace placeholders** — swap `project-n` (service name) and `hpa` (namespace) throughout all files:
+2. **Replace placeholders** — swap `project-n` with your service name throughout all files:
    ```sh
    find . -name '*.yaml' | xargs sed -i '' 's/project-n/your-service/g'
    ```
 3. **Provision the TLS secret** referenced in `gateway.yaml` (`project-n-tls`) via cert-manager or manually before applying the Gateway.
-4. **Apply in order:**
+4. **Apply:**
    ```sh
    kubectl apply -f namespace.yaml
-   kubectl apply -f serviceaccount.yaml
-   kubectl apply -f resourcequota.yaml
-   kubectl apply -f limitrange.yaml
-   kubectl apply -f networkpolicy.yaml
-   kubectl apply -f deployment.yaml
-   kubectl apply -f service.yaml
-   kubectl apply -f hpa.yaml
-   kubectl apply -f vpa.yaml
-   kubectl apply -f pdb.yaml
-   kubectl apply -f gateway.yaml
-   kubectl apply -f httproute.yaml
+   kubectl apply -f .
    ```
 
 ## Requirements
 
 - Kubernetes 1.25+ (for Pod Security Admission)
 - [Traefik](https://doc.traefik.io/traefik/providers/kubernetes-gateway/) installed in the `traefik` namespace with the Gateway API provider enabled
+- Gateway API CRDs installed (`gateway.networking.k8s.io/v1`)
 - VPA CRDs installed if you want VPA recommendations (`vpa.yaml`)
 - Metrics Server installed for HPA to function (`hpa.yaml`)
