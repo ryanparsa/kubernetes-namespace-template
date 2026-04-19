@@ -29,9 +29,9 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
 | `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
 
-## Prerequisites
+## Optional Add-ons
 
-| Dependency | Notes |
+| Tool | Notes |
 |------------|-------|
 | [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
 | [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts `project-n-secret` for safe GitOps storage |
