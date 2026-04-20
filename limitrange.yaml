@@ -10,11 +10,37 @@ metadata:
 spec:
   limits:
     - type: Container
+      # Defaults applied when a container omits requests or limits entirely
       default:
-        # Applied as the limit if the developer does not set one
         cpu: 500m
         memory: 512Mi
       defaultRequest:
-        # Applied as the request if the developer does not set one
-        cpu: 200m
-        memory: 256Mi
+        cpu: 100m
+        memory: 128Mi
+      # Hard floor - prevents containers with no meaningful resource signal
+      min:
+        cpu: 10m
+        memory: 16Mi
+      # Hard ceiling per container - aligns with VPA maxAllowed
+      max:
+        cpu: "2"
+        memory: 2Gi
+      # Caps burst ratio: limit may not exceed 10x CPU request or 4x memory request.
+      # Prevents low-request / high-limit containers from starving neighbours
+      # during contention while appearing cheap to the scheduler.
+      maxLimitRequestRatio:
+        cpu: "10"
+        memory: "4"
+
+    # Aggregate ceiling across all containers in a single Pod
+    - type: Pod
+      max:
+        cpu: "4"
+        memory: 4Gi
+
+    # Per-PVC storage bounds - total namespace cap is set in ResourceQuota
+    - type: PersistentVolumeClaim
+      min:
+        storage: 1Gi
+      max:
+        storage: 20Gi
