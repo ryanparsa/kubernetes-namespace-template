@@ -2,29 +2,33 @@
 
 [![Test with kind](https://github.com/ryanparsa/kubernetes-namespace-template/actions/workflows/test.yaml/badge.svg)](https://github.com/ryanparsa/kubernetes-namespace-template/actions/workflows/test.yaml)
 
-A production-ready baseline for deploying a service on Kubernetes. Replace every occurrence of `project-n` with your service name, then apply the manifests.
+A production-ready, security-hardened baseline for deploying a service on Kubernetes. Spinning up a new service means configuring Pod Security Admission, NetworkPolicy, RBAC, TLS, autoscaling, and resource limits - all before writing a line of application code. This template has it all pre-wired, tested, and mapped to OWASP and CIS controls so you can clone it, rename the placeholder, and apply it to your cluster in minutes.
+
+## Why this template?
+
+Every resource here is intentional. The security defaults (non-root containers, read-only filesystems, default-deny network policies, file-mounted secrets, empty RBAC roles) exist because they are the right defaults for production workloads, not just boilerplate filler. The autoscaling stack (HPA + VPA + PDB + topology spread) is configured to work together safely. Everything is tested end-to-end on every push using a real Kubernetes cluster. If you've ever bootstrapped a new service and copy-pasted policies from five different sources, this gives you a single audited starting point instead.
 
 ## Included Resources
 
 > **Pure Kubernetes by default.** 13 of 16 resources use only built-in Kubernetes APIs.
-> You can delete any of those files if you don't need them — the rest applies cleanly to any standard cluster.
+> You can delete any of those files if you don't need them - the rest applies cleanly to any standard cluster.
 
 | File | Resource(s) | Purpose | Requires |
 |------|-------------|---------|----------|
-| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission `restricted` enforcement | — |
-| `serviceaccount.yaml` | ServiceAccount | Workload identity with token auto-mount disabled | — |
-| `configmap.yaml` | ConfigMap | Non-sensitive configuration loaded as environment variables | — |
-| `secret.yaml` | Secret (x2) | App credentials (file-mounted) + TLS certificate | — |
-| `resourcequota.yaml` | ResourceQuota | Namespace-level CPU/memory/pod caps | — |
-| `limitrange.yaml` | LimitRange | Per-container default requests and limits | — |
-| `networkpolicy.yaml` | NetworkPolicy (x3) | Default-deny all, allow gateway ingress, allow DNS egress | — |
-| `deployment.yaml` | Deployment | Main workload - non-root, read-only FS, rolling update | — |
-| `service.yaml` | Service | ClusterIP exposing the deployment on port 80 | — |
+| `namespace.yaml` | Namespace | Creates the namespace with Pod Security Admission `restricted` enforcement | - |
+| `serviceaccount.yaml` | ServiceAccount | Workload identity with token auto-mount disabled | - |
+| `configmap.yaml` | ConfigMap | Non-sensitive configuration loaded as environment variables | - |
+| `secret.yaml` | Secret (x2) | App credentials (file-mounted) + TLS certificate | - |
+| `resourcequota.yaml` | ResourceQuota | Namespace-level CPU/memory/pod caps | - |
+| `limitrange.yaml` | LimitRange | Per-container default requests and limits | - |
+| `networkpolicy.yaml` | NetworkPolicy (x3) | Default-deny all, allow gateway ingress, allow DNS egress | - |
+| `deployment.yaml` | Deployment | Main workload - non-root, read-only FS, rolling update | - |
+| `service.yaml` | Service | ClusterIP exposing the deployment on port 80 | - |
 | `hpa.yaml` | HorizontalPodAutoscaler | Scales 3-10 replicas on CPU/memory (50% target) | [Metrics Server](https://github.com/kubernetes-sigs/metrics-server) |
 | `vpa.yaml` | VerticalPodAutoscaler | Advisory right-sizing recommendations (mode: Off) | [VPA CRDs](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) |
-| `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions | — |
-| `role.yaml` | Role | Empty RBAC Role - add rules here as your workload requires | — |
-| `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount | — |
+| `pdb.yaml` | PodDisruptionBudget | Maintains at least 2 pods during voluntary disruptions | - |
+| `role.yaml` | Role | Empty RBAC Role - add rules here as your workload requires | - |
+| `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount | - |
 | `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
 | `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
 
@@ -46,6 +50,37 @@ find . -name '*.yaml' | xargs sed -i 's/project-n/my-service/g'
 
 # 4. Apply
 kubectl apply -f .
+```
+
+### Using Kustomize
+
+A `kustomization.yaml` is included that lists all 16 resources. You can apply everything directly:
+
+```bash
+kubectl apply -k .
+```
+
+The real benefit is using it as a base for environment-specific overlays - no need to edit the base files. Create an overlay directory and extend it:
+
+```yaml
+# overlays/production/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../   # points to the base
+
+namespace: my-service-prod
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+```
+
+Then apply the overlay:
+
+```bash
+kubectl apply -k overlays/production/
 ```
 
 ## Architecture
@@ -127,4 +162,8 @@ namespace -> serviceaccount -> role -> rolebinding -> configmap -> secret -> res
 
 - [klist](https://github.com/ryanparsa/klist) - Interactive Kubernetes operational checklist to verify cluster readiness
 - [kubernetes-certification](https://github.com/ryanparsa/kubernetes-certification) - CKA/KCNA/KCSA certification training scenarios
+
+---
+
+Found a bug or have an improvement? [Open an issue](https://github.com/ryanparsa/kubernetes-namespace-template/issues) - contributions welcome.
 
