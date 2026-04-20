@@ -7,7 +7,6 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 ## Included Resources
 
 > **Pure Kubernetes by default.** 13 of 16 resources use only built-in Kubernetes APIs.
-> Three resources need external components: `hpa.yaml` (Metrics Server), `vpa.yaml` (VPA CRDs), and `gateway.yaml`/`httproute.yaml` (Gateway API CRDs + a controller).
 > You can delete any of those files if you don't need them — the rest applies cleanly to any standard cluster.
 
 | File | Resource(s) | Purpose | Requires |
@@ -28,21 +27,6 @@ A production-ready baseline for deploying a service on Kubernetes. Replace every
 | `rolebinding.yaml` | RoleBinding | Binds the Role to the workload ServiceAccount | — |
 | `gateway.yaml` | Gateway | Gateway with HTTP (80) and HTTPS (443) listeners | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
 | `httproute.yaml` | HTTPRoute (x2) | HTTP->HTTPS redirect (301) + HTTPS backend routing | [Gateway API CRDs](https://gateway-api.sigs.k8s.io/) + [controller](https://gateway-api.sigs.k8s.io/implementations/) |
-
-## Optional Add-ons
-
-> None of these are required. They complement the baseline depending on your needs.
-
-| Tool | Notes |
-|------------|-------|
-| [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
-| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts `project-n-secret` for safe GitOps storage |
-| [External Secrets](https://external-secrets.io/) | Syncs secrets from external vaults (AWS, GCP, Vault, etc.) |
-| [Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) | Mounts secrets from external vaults directly as volumes - alternative to External Secrets |
-| [External DNS](https://github.com/kubernetes-sigs/external-dns) | Automatically creates DNS records for the Gateway hostname |
-| [Karpenter](https://github.com/kubernetes-sigs/karpenter) | Node autoscaler - the `safe-to-evict` annotation on the pod template is compatible with it |
-| [Descheduler](https://github.com/kubernetes-sigs/descheduler) | Rebalances pods across nodes - complements the topology spread constraint |
-| [Security Profiles Operator](https://github.com/kubernetes-sigs/security-profiles-operator) | Manages seccomp and AppArmor profiles - extends the `seccompProfile: RuntimeDefault` used here |
 
 ## Usage
 
@@ -112,6 +96,22 @@ app.kubernetes.io/managed-by: kubectl
 | Availability | HPA (3-10), PDB (minAvailable: 2), topology spread, zero-downtime rolling update | CIS 5.7 |
 
 Controls not enforced at the manifest level (require cluster-level configuration): etcd encryption at rest (CIS 1.2.34), audit logging (CIS 1.2.22), API server hardening (CIS 1.2.*).
+
+
+## Optional Add-ons
+
+> None of these are required. They complement the baseline depending on your needs.
+
+| Tool | Notes |
+|------------|-------|
+| [cert-manager](https://cert-manager.io/) | Automates TLS certificate provisioning instead of manual `project-n-tls` secret |
+| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | Encrypts `project-n-secret` for safe GitOps storage |
+| [External Secrets](https://external-secrets.io/) | Syncs secrets from external vaults (AWS, GCP, Vault, etc.) |
+| [Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver) | Mounts secrets from external vaults directly as volumes - alternative to External Secrets |
+| [External DNS](https://github.com/kubernetes-sigs/external-dns) | Automatically creates DNS records for the Gateway hostname |
+| [Karpenter](https://github.com/kubernetes-sigs/karpenter) | Node autoscaler - the `safe-to-evict` annotation on the pod template is compatible with it |
+| [Descheduler](https://github.com/kubernetes-sigs/descheduler) | Rebalances pods across nodes - complements the topology spread constraint |
+| [Security Profiles Operator](https://github.com/kubernetes-sigs/security-profiles-operator) | Manages seccomp and AppArmor profiles - extends the `seccompProfile: RuntimeDefault` used here |
 
 ## Testing
 
