@@ -13,6 +13,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: project-n-deployment
+  # For trafficDistribution: PreferSameZone (service.yaml) to activate, the EndpointSlice
+  # controller requires at least 3 endpoints per zone. In a 3-zone cluster this means
+  # minReplicas should be 9+; fewer causes hints to be skipped and routing falls back
+  # cluster-wide, silently defeating topology-aware routing.
   minReplicas: 3
   maxReplicas: 10
   metrics:
