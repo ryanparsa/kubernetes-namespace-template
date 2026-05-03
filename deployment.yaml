@@ -140,7 +140,7 @@ spec:
               drop:
                 - ALL
 
-          # Load all ConfigMap keys as environment variables
+          # Non-sensitive config loaded as env vars; secrets/token mounted as files below
           envFrom:
             - configMapRef:
                 name: project-n-cm
@@ -151,9 +151,10 @@ spec:
               mountPath: /tmp
               readOnly: false
 
-            # Mount secret as files - safer than env vars (not captured in crash dumps or logs)
-            - name: secret
-              mountPath: /etc/secret
+            # Projected volume merges SA token + secret under one directory.
+            # Files are not captured in crash dumps or logs; token rotates automatically.
+            - name: app-credentials
+              mountPath: /etc/app
               readOnly: true
 
       volumes:
@@ -161,9 +162,18 @@ spec:
           emptyDir:
             sizeLimit: 64Mi
 
-        - name: secret
-          secret:
+        - name: app-credentials
+          projected:
             # 0440 = owner+group read; fsGroup:10000 chowns files to root:10000 so the
             # non-root process can read without world-readable permissions
             defaultMode: 0440
-            secretName: project-n-secret
+            sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3600
+                  audience: project-n
+                  path: token
+              - secret:
+                  name: project-n-secret
+                  items:
+                    - key: credentials.json
+                      path: credentials.json
